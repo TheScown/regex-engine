@@ -7,6 +7,8 @@ case class MatchedCharacter(c: Char) extends Matched
 
 
 case class Nfa(startState: State, finalStates: Set[State], transitions: Map[State, Map[Matched, Set[State]]]) {
+  def |(other: Nfa): Nfa = Nfa.union(this, other)
+  def * : Nfa = Nfa.star(this)
 }
 
 // Represent as a Map[State, Map[Single, Set[State]]], with a startState and a set of final states
@@ -109,5 +111,3 @@ private object State {
     else s.substring(0, s.length - 1) + s.last.+(1).toChar
   }).iterator
 }
-
-
