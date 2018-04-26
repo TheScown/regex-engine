@@ -9,6 +9,7 @@ case class MatchedCharacter(c: Char) extends Matched
 
 
 case class Nfa(startState: State, finalStates: Set[State], transitions: Map[State, Map[Matched, Set[State]]]) {
+  def apply(other: Nfa): Nfa = Nfa.concatenation(this, other)
   def |(other: Nfa): Nfa = Nfa.union(this, other)
   def * : Nfa = Nfa.star(this)
 }
