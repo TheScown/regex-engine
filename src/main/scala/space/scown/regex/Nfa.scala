@@ -1,5 +1,7 @@
 package space.scown.regex
 
+import scala.languageFeature.implicitConversions
+
 sealed trait Matched
 
 case object Epsilon extends Matched
@@ -84,6 +86,11 @@ object Nfa {
         ++ n.finalStates.map(s => (s, Map(Epsilon -> Set(endLoop)))).asInstanceOf[Map[State, Map[Matched, Set[State]]]]
         ++ n.transitions
     )
+  }
+
+  implicit def string2Nfa(s: String): Nfa = {
+    if (s.isEmpty) Nfa.EMPTY
+    else s.map(c => Nfa.character(MatchedCharacter(c))).reduce(Nfa.concatenation)
   }
 
 }
