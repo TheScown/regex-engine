@@ -13,6 +13,93 @@ case class Nfa(startState: State, finalStates: Set[State], transitions: Transiti
   def apply(other: Nfa): Nfa = Nfa.concatenation(this, other)
   def |(other: Nfa): Nfa = Nfa.union(this, other)
   def * : Nfa = Nfa.star(this)
+
+  def compile: Dfa = {
+    def findReachableStates(states: Set[State], visited: Set[State] = Set()): Set[State] = {
+      if (states.isEmpty) Set()
+      else {
+        val reachable = states.flatMap(s => transitions.getOrElse(s, Map()).getOrElse(Epsilon, Set())).diff(visited)
+
+        states ++ reachable ++ findReachableStates(reachable, visited ++ states)
+      }
+    }
+
+    def constructDfa(
+      nfaStates: Set[State],
+      dfa: Dfa,
+      stateMap: Map[Set[State], State]
+    ): Dfa = {
+      val reachableStates = findReachableStates(nfaStates)
+
+      val nfaTransitions: Map[MatchedCharacter, Set[State]] = reachableStates
+        .map(s => transitions.getOrElse(s, Map()).filter({
+          case (matched, _) => matched != Epsilon
+        }).asInstanceOf[Map[MatchedCharacter, Set[State]]])
+        .fold(Map())((map1: Map[MatchedCharacter, Set[State]], map2: Map[MatchedCharacter, Set[State]]) => {
+          val keys1 = map1.keySet
+          val keys2 = map2.keySet
+
+          val intersection = keys1.intersect(keys2)
+          val only1 = keys1.diff(keys2)
+          val only2 = keys2.diff(keys1)
+
+          (Map()
+            ++ only1.map(key => (key, map1(key)))
+            ++ only2.map(key => (key, map2(key)))
+            ++ intersection.map(key => (key, map1(key) ++ map2(key))))
+        })
+
+      val newDfaStates = nfaTransitions.map({
+        case (_, states) => (states, new State(states.map(_.label)))
+      }) -- stateMap.keys
+
+      val newTransitions: Map[MatchedCharacter, State] = nfaTransitions.map({
+        case (matched, states) => (matched, newDfaStates.getOrElse(states, stateMap(states)))
+      })
+
+      val dfaState = stateMap(nfaStates)
+
+      val isFinalState = reachableStates.intersect(finalStates).nonEmpty
+
+      val updatedDfa = dfa.copy(
+        finalStates = if (isFinalState) dfa.finalStates + dfaState else dfa.finalStates,
+        transitions = if (newTransitions.nonEmpty) dfa.transitions + (dfaState -> newTransitions) else dfa.transitions
+      )
+
+      if (newDfaStates.isEmpty) updatedDfa
+      else newDfaStates
+        .map({
+          case (states, _) => constructDfa(
+            states,
+            updatedDfa,
+            stateMap ++ newDfaStates
+          )
+        })
+        .fold(dfa)((dfa1, dfa2) => {
+          dfa1.copy(
+            finalStates = dfa1.finalStates ++ dfa2.finalStates,
+            transitions = {
+              val intersection = dfa1.transitions.keySet.intersect(dfa2.transitions.keySet)
+
+              val intersectionMap = intersection.map(state => {
+                state -> (dfa1.transitions(state) ++ dfa2.transitions(state))
+              })
+
+              dfa1.transitions ++ dfa2.transitions ++ intersectionMap
+            }
+          )
+        })
+    }
+
+    val nfaStartStates = findReachableStates(Set(startState))
+    val isFinalState = nfaStartStates.intersect(finalStates).nonEmpty
+    val dfaStartState = new State(nfaStartStates.map(_.label))
+
+    constructDfa(
+      nfaStartStates,
+      Dfa(dfaStartState, if (isFinalState) Set(dfaStartState) else Set(), Map()),
+      Map(nfaStartStates -> dfaStartState))
+  }
 }
 
 // Represent as a Map[State, Map[Single, Set[State]]], with a startState and a set of final states

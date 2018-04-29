@@ -6,6 +6,8 @@ case class State(label: String) {
 
   def this() = this(State.labels.next())
 
+  def this(labels: Set[String]) = this(labels.toSeq.sorted.mkString(","))
+
 }
 
 private object State {

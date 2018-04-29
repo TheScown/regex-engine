@@ -110,6 +110,94 @@ class Nfa$Test extends FunSpec {
         )
       ))
     }
+
+    describe("compile") {
+      it("should compile the empty regex") {
+        val start = 0
+        val finalState = 1
+        val dfaState = s"$start,$finalState"
+
+        val nfa: Nfa = ""
+
+        assert(nfa.compile == Dfa(
+          State(dfaState),
+          Set(State(dfaState)),
+          Map()
+        ))
+      }
+
+      it("should compile the single character regex") {
+        val nextInt = State.labels.next()
+        val start = nextInt + 1
+        val finalState = nextInt + 2
+
+        val nfa: Nfa = "0"
+
+        assert(nfa.compile == Dfa(
+          new State(start),
+          Set(new State(finalState)),
+          Map((new State(start), Map((MatchedCharacter('0'), new State(finalState)))))
+        ))
+      }
+
+      it("should compile a concatenation regex") {
+        val nextInt = State.labels.next()
+        val startA = nextInt + 1
+        val endA = nextInt + 2
+        val endB = nextInt + 4
+        val start = nextInt + 5
+
+        val nfa: Nfa = "ab"
+
+        assert(nfa.compile == Dfa(
+          new State(s"$startA,$start"),
+          Set(new State(s"$endB")),
+          Map(
+            (new State(s"$startA,$start"), Map((MatchedCharacter('a'), new State(s"$endA")))),
+            (new State(s"$endA"), Map((MatchedCharacter('b'), new State(s"$endB"))))
+          )
+        ))
+      }
+
+      it("should compile a union regex") {
+        val nextInt = State.labels.next()
+        val startA = nextInt + 1
+        val endA = nextInt + 2
+        val startB = nextInt + 3
+        val endB = nextInt + 4
+        val start = nextInt + 5
+
+        val nfa: Nfa = "a"|"b"
+
+        assert(nfa.compile == Dfa(
+          new State(s"$startA,$startB,$start"),
+          Set(new State(s"$endA"), new State(s"$endB")),
+          Map(
+            (new State(s"$startA,$startB,$start"), Map((MatchedCharacter('a'), new State(s"$endA")), (MatchedCharacter('b'), new State(s"$endB"))))
+          )
+        ))
+      }
+
+      it("should compile a star regex") {
+        val nextInt = State.labels.next()
+        val startA = nextInt + 1
+        val endA = nextInt + 2
+        val start = nextInt + 3
+        val finalState = nextInt + 4
+        val startLoop = nextInt + 5
+
+        val nfa: Nfa = "a"*
+
+        assert(nfa.compile == Dfa(
+          new State(s"$startA,$start,$finalState,$startLoop"),
+          Set(new State(s"$startA,$start,$finalState,$startLoop"), new State(s"$endA")),
+          Map(
+            (new State(s"$startA,$start,$finalState,$startLoop"), Map((MatchedCharacter('a'), new State(s"$endA")))),
+            (new State(s"$endA"), Map((MatchedCharacter('a'), new State(s"$endA"))))
+          )
+        ))
+      }
+    }
   }
 
 }
