@@ -192,6 +192,12 @@ class Nfa$Test extends FunSpec {
           )
         ))
       }
+
+      it("should compile a complex regex") {
+        val nfa: Nfa = ("011"|"10")("1"*)|("00"|"11")(("01"*)|"")
+
+        nfa.compile
+      }
     }
   }
 
