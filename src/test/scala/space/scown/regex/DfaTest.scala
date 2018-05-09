@@ -18,7 +18,7 @@ class DfaTest extends FunSpec {
 
         val matches = dfa.matches("")
 
-        assert(matches === None)
+        assert(matches === Stream())
       }
 
       it("should match single characters") {
@@ -28,8 +28,7 @@ class DfaTest extends FunSpec {
 
         val matches = dfa.matches("0")
 
-        assert(matches.get.matched === "0")
-        assert(matches.get.next() === None)
+        assert(matches === "0" #:: Stream())
       }
 
       it("should match concatenations") {
@@ -39,8 +38,7 @@ class DfaTest extends FunSpec {
 
         val matches = dfa.matches("ab")
 
-        assert(matches.get.matched === "ab")
-        assert(matches.get.next() === None)
+        assert(matches === "ab" #:: Stream())
       }
 
       it("should match unions") {
@@ -48,8 +46,8 @@ class DfaTest extends FunSpec {
 
         val dfa = nfa.compile
 
-        assert(dfa.matches("a").get.matched === "a")
-        assert(dfa.matches("b").get.matched === "b")
+        assert(dfa.matches("a") === "a" #:: Stream())
+        assert(dfa.matches("b") === "b" #:: Stream())
       }
 
       it("should match *") {
@@ -57,8 +55,8 @@ class DfaTest extends FunSpec {
 
         val dfa = nfa.compile
 
-        assert(dfa.matches("a").get.matched === "a")
-        assert(dfa.matches("aa").get.matched === "aa")
+        assert(dfa.matches("a") === "a" #:: Stream())
+        assert(dfa.matches("aa") === "aa" #:: Stream())
       }
 
       it("should match a complex regex") {
@@ -66,20 +64,19 @@ class DfaTest extends FunSpec {
 
         val dfa = nfa.compile
 
-        assert(dfa.matches("00").get.matched === "00")
-        assert(dfa.matches("11").get.matched === "11")
-        assert(dfa.matches("011").get.matched === "011")
-        assert(dfa.matches("01111").get.matched === "01111")
-        assert(dfa.matches("01111").get.matched === "01111")
-        assert(dfa.matches("10").get.matched === "10")
-        assert(dfa.matches("101").get.matched === "101")
-        assert(dfa.matches("1011").get.matched === "1011")
-        assert(dfa.matches("0001").get.matched === "0001")
-        assert(dfa.matches("1101").get.matched === "1101")
-        assert(dfa.matches("000").get.matched === "000")
-        assert(dfa.matches("00011").get.matched === "00011")
-        assert(dfa.matches("110").get.matched === "110")
-        assert(dfa.matches("11011").get.matched === "11011")
+        assert(dfa.matches("00") === "00" #:: Stream())
+        assert(dfa.matches("11") === "11" #:: Stream())
+        assert(dfa.matches("011") === "011" #:: Stream())
+        assert(dfa.matches("01111") === "01111" #:: Stream())
+        assert(dfa.matches("10") === "10" #:: Stream())
+        assert(dfa.matches("101") === "101" #:: Stream())
+        assert(dfa.matches("1011") === "1011" #:: Stream())
+        assert(dfa.matches("0001") === "0001" #:: Stream())
+        assert(dfa.matches("1101") === "1101" #:: Stream())
+        assert(dfa.matches("000") === "000" #:: Stream())
+        assert(dfa.matches("00011") === "00011" #:: Stream())
+        assert(dfa.matches("110") === "110" #:: Stream())
+        assert(dfa.matches("11011") === "11011" #:: Stream())
       }
     }
 
@@ -91,8 +88,7 @@ class DfaTest extends FunSpec {
 
         val matches = dfa.matches("00")
 
-        assert(matches.get.matched === "0")
-        assert(matches.get.next().get.matched === "0")
+        assert(matches === "0" #:: "0" #:: Stream())
       }
 
       it("should match concatenations") {
@@ -102,8 +98,7 @@ class DfaTest extends FunSpec {
 
         val matches = dfa.matches("abab")
 
-        assert(matches.get.matched === "ab")
-        assert(matches.get.next().get.matched === "ab")
+        assert(matches === "ab" #:: "ab" #:: Stream())
       }
 
       it("should match unions") {
@@ -113,8 +108,7 @@ class DfaTest extends FunSpec {
 
         val matches = dfa.matches("ab")
 
-        assert(matches.get.matched === "a")
-        assert(matches.get.next().get.matched === "b")
+        assert(matches === "a" #:: "b" #:: Stream())
       }
 
       it("should match *") {
@@ -123,8 +117,7 @@ class DfaTest extends FunSpec {
         val dfa = nfa.compile
 
         val matches = dfa.matches("abaa")
-        assert(matches.get.matched === "a")
-        assert(matches.get.next().get.matched === "aa")
+        assert(matches === "a" #:: "aa" #:: Stream())
       }
 
       it("should match a complex regex") {
@@ -132,22 +125,9 @@ class DfaTest extends FunSpec {
 
         val dfa = nfa.compile
 
-        val matches = dfa.matches("00 11 011 01111 ")
+        val matches = dfa.matches("00 11 011 01111 10 101 1011 0001 1101 000 00011 110 11011")
 
-        assert(dfa.matches("00").get.matched === "00")
-        assert(dfa.matches("11").get.matched === "11")
-        assert(dfa.matches("011").get.matched === "011")
-        assert(dfa.matches("01111").get.matched === "01111")
-        assert(dfa.matches("01111").get.matched === "01111")
-        assert(dfa.matches("10").get.matched === "10")
-        assert(dfa.matches("101").get.matched === "101")
-        assert(dfa.matches("1011").get.matched === "1011")
-        assert(dfa.matches("0001").get.matched === "0001")
-        assert(dfa.matches("1101").get.matched === "1101")
-        assert(dfa.matches("000").get.matched === "000")
-        assert(dfa.matches("00011").get.matched === "00011")
-        assert(dfa.matches("110").get.matched === "110")
-        assert(dfa.matches("11011").get.matched === "11011")
+        assert(matches === "00" #:: "11" #:: "011" #:: "01111" #:: "10" #:: "101" #:: "1011" #:: "0001" #:: "1101" #:: "000" #:: "00011" #:: "110" #:: "11011" #:: Stream())
       }
     }
   }
