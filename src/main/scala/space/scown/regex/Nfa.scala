@@ -53,8 +53,8 @@ case class Nfa(startState: State, finalStates: Set[State], transitions: Transiti
         case (_, states) => (states, new State(states.map(_.label)))
       }) -- stateMap.keys
 
-      val newTransitions: Map[MatchedCharacter, State] = nfaTransitions.map({
-        case (matched, states) => (matched, newDfaStates.getOrElse(states, stateMap(states)))
+      val newTransitions: Map[Char, State] = nfaTransitions.map({
+        case (matched, states) => (matched.c, newDfaStates.getOrElse(states, stateMap(states)))
       })
 
       val dfaState = stateMap(nfaStates)
