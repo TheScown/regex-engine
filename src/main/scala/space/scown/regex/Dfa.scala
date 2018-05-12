@@ -5,7 +5,7 @@ import space.scown.regex.Dfa.TransitionMap
 case class Dfa(startState: State, finalStates: Set[State], transitions: TransitionMap) {
   def matches(s: String): Stream[String] = {
     def helper(s: Vector[Char], state: State, lastResult: Option[String], acc: Vector[Char], next: Vector[Char]): Stream[String] = s match {
-      case Vector() if lastResult.isDefined => lastResult.get #:: Stream()
+      case Vector() if lastResult.isDefined => Stream(lastResult.get)
       case Vector() => Stream()
       case h +: t => transitions.getOrElse(state, Map()).get(h) match {
         case Some(nextState) if finalStates.contains(nextState) => helper(t, nextState, Some((acc :+ h).mkString("")), acc :+ h, t)
