@@ -3,8 +3,6 @@ package space.scown.regex
 import org.scalatest.FunSpec
 // exclude Predef to avoid conflicts
 import scala.Predef.{augmentString => _}
-import scala.Predef.ArrowAssoc
-import scala.collection.immutable.{Set, Map}
 import space.scown.regex.Nfa.string2Nfa
 import scala.language.postfixOps
 
