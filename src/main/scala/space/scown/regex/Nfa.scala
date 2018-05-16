@@ -91,13 +91,12 @@ case class Nfa(startState: State, finalStates: Set[State], transitions: Transiti
         })
     }
 
-    val nfaStartStates = findReachableStates(Set(startState))
-    val isFinalState = nfaStartStates.intersect(finalStates).nonEmpty
+    val nfaStartStates = Set(startState)
     val dfaStartState = new State(nfaStartStates.map(_.label))
 
     constructDfa(
       nfaStartStates,
-      Dfa(dfaStartState, if (isFinalState) Set(dfaStartState) else Set(), Map()),
+      Dfa(dfaStartState, Set(), Map()),
       Map(nfaStartStates -> dfaStartState))
   }
 }
