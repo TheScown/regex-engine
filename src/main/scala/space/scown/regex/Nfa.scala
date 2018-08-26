@@ -2,6 +2,7 @@ package space.scown.regex
 
 import space.scown.regex.Nfa.TransitionMap
 
+import scala.annotation.tailrec
 import scala.languageFeature.implicitConversions
 
 sealed trait Matched
@@ -15,23 +16,18 @@ case class Nfa(startState: State, finalStates: Set[State], transitions: Transiti
   def * : Nfa = Nfa.star(this)
 
   def compile: Dfa = {
-    def findReachableStates(states: Set[State], visited: Set[State] = Set()): Set[State] = {
-      if (states.isEmpty) Set()
+    @tailrec
+    def findReachableStates(states: Set[State], visited: Set[State] = Set(), reachableStates: Set[State] = Set()): Set[State] = {
+      if (states.isEmpty) reachableStates
       else {
         val reachable = states.flatMap(s => transitions.getOrElse(s, Map()).getOrElse(Epsilon, Set())).diff(visited)
 
-        states ++ reachable ++ findReachableStates(reachable, visited ++ states)
+        findReachableStates(reachable, visited ++ states, states ++ reachable ++ reachableStates)
       }
     }
 
-    def constructDfa(
-      nfaStates: Set[State],
-      dfa: Dfa,
-      stateMap: Map[Set[State], State]
-    ): Dfa = {
-      val reachableStates = findReachableStates(nfaStates)
-
-      val nfaTransitions: Map[MatchedCharacter, Set[State]] = reachableStates
+    def getNfaTransitions(reachableStates: Set[State]) = {
+      reachableStates
         .map(s => transitions.getOrElse(s, Map()).filter({
           case (matched, _) => matched != Epsilon
         }).asInstanceOf[Map[MatchedCharacter, Set[State]]])
@@ -48,6 +44,16 @@ case class Nfa(startState: State, finalStates: Set[State], transitions: Transiti
             ++ only2.map(key => (key, map2(key)))
             ++ intersection.map(key => (key, map1(key) ++ map2(key))))
         })
+    }
+
+    def constructDfa(
+      nfaStates: Set[State],
+      dfa: Dfa,
+      stateMap: Map[Set[State], State]
+    ): Dfa = {
+      val reachableStates = findReachableStates(nfaStates)
+
+      val nfaTransitions: Map[MatchedCharacter, Set[State]] = getNfaTransitions(reachableStates)
 
       val newDfaStates = nfaTransitions.map({
         case (_, states) => (states, new State(states.map(_.label)))
