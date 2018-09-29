@@ -135,7 +135,7 @@ class Nfa$Test extends FunSpec {
         assert(nfa.compile == Dfa(
           new State(start),
           Set(new State(finalState)),
-          Map((new State(start), Map((MatchedCharacter('0'), new State(finalState)))))
+          Map((new State(start), Map(('0', new State(finalState)))))
         ))
       }
 
@@ -194,7 +194,7 @@ class Nfa$Test extends FunSpec {
       }
 
       it("should compile a complex regex") {
-        val nfa: Nfa = ("011"|"10")("1"*)|("00"|"11")(("01"*)|"")
+        val nfa: Nfa = ("011"|"10")("1"*)|("00"|"11")("0"("1"*)|"")
 
         nfa.compile
       }
