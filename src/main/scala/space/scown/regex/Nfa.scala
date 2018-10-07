@@ -141,7 +141,7 @@ object Nfa {
         joinState -> Map(Epsilon -> Set(n2.startState))
       ).asInstanceOf[TransitionMap]
         ++ n1.finalStates.map(s => (s, Map(Epsilon.asInstanceOf[Matched] -> Set(joinState))))
-        ++ n2.finalStates.map(s => (s, Map(Epsilon.asInstanceOf[Matched] -> Set(finalState)))).toMap
+        ++ n2.finalStates.map(s => (s, Map(Epsilon.asInstanceOf[Matched] -> Set(finalState))))
         ++ n1.transitions
         ++ n2.transitions
     )
